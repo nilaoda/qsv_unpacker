@@ -41,6 +41,7 @@ def get_prop(key, text):
     res = re.search(pattern, text).group(1).strip()
     res = res.replace('斜引','\\"')
     res = res.replace('\\n','\n')
+    res = res.replace('\\"','"')
     return res
 
 def change_file_extension(filename, new_extension):
