@@ -162,16 +162,16 @@ with open(qsv_file, "w+b") as f:
     unknown2 = binascii.unhexlify("00000000000000000000000000000000")
     unknown3 = 1
     unknown4 = 1
-    xml_offset = 92+QsvIndex.size*len(files)
-    xml_size = len(json_bytes)
     nb_indices = len(files)
+    _unknown_flag_size = (nb_indices + 7) >> 3
+    xml_offset = QsvHeader.size+_unknown_flag_size+QsvIndex.size*len(files)
+    xml_size = len(json_bytes)
     f.write(QsvHeader.pack(signature, version, vid, unknown1, unknown2, unknown3, unknown4, xml_offset, xml_size, nb_indices))
     
     # nb_indices
     console.print(f"[b]segs   => [/b][cyan]{nb_indices}[/cyan]")
 
     # 写入索引
-    _unknown_flag_size = (nb_indices + 7) >> 3
     f.seek(_unknown_flag_size, 1)
     offset = xml_offset+xml_size
     qindices = []
@@ -189,7 +189,6 @@ with open(qsv_file, "w+b") as f:
     # 打印总大小
     console.print(f"[b]size   => [/b][cyan]{sum([i[2] for i in qindices])}[/cyan]")
     
-    #print(92+QsvIndex.size*len(files))
     # 写入json
     f.seek(xml_offset)
     tmp = bytearray(json_bytes)
