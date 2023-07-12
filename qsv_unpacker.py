@@ -10,7 +10,7 @@ console = Console()
 
 def decrypt_1(buffer):
     dict = [0x62, 0x67, 0x70, 0x79]
-    for i in range(len(buffer)):
+    for i in range(len(buffer) // 4 * 4):
         j = ~i & 0x3
         buffer[i] ^= dict[j]
 
@@ -114,7 +114,7 @@ with open(in_file, "r+b") as f:
     f.seek(xml_offset)
     xml = bytearray(f.read(xml_size))
     decrypt_1(xml)
-    xml = xml.decode('utf-8')
+    xml = xml[8:-2].decode('utf-8')
 
     # tvid
     tvid = get_prop(key='tvid', text=xml)
