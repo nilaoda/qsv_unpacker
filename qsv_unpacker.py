@@ -58,7 +58,7 @@ def find_bytes(byte_array, target_byte):
 
 #========================
 
-console.print('QSV Unpacker v20230710', style='bold white on cyan')
+console.print('QSV Unpacker v20230712', style='bold white on cyan')
 print()
 
 # 结构体定义
