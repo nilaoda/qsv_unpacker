@@ -108,7 +108,8 @@ with open(in_file, "r+b") as f:
         table = bytearray(i[0])
         console.print(f"          filename: {binascii.hexlify(table).decode()}, offset: {(i[1])}, size: {i[2]} ", style="bright_black")
     # 打印总大小
-    console.print(f"[b]size   => [/b][cyan]{sum([i[2] for i in qindices])}[/cyan]")
+    total_size = sum([i[2] for i in qindices])
+    console.print(f"[b]size   => [/b][cyan]{total_size}[/cyan]")
     
     # 解密XML
     f.seek(xml_offset)
@@ -147,20 +148,23 @@ with open(in_file, "r+b") as f:
     # TS起始位置
     offset = qindices[0][1]
     # 写出TS文件
-    total_size = os.path.getsize(in_file) - offset
     out_file = change_file_extension(in_file,'.ts')
     console.print(f"[b]out3   =>[/b] [cyan]{out_file}[/cyan]")
     with Progress() as progress, open(in_file, "rb") as in_f, open(out_file, "w+b") as out_f:
         task = progress.add_task("[b]Copy TS...[/b]", total=total_size)
+        writed_size = 0
         chunk_size = 2048
         in_f.seek(offset)
-        while True:
+        while writed_size < total_size:
             chunk = in_f.read(chunk_size)
             if not chunk:
                 break
-            out_f.write(chunk)
+            if writed_size + len(chunk) > total_size:
+                out_f.write(chunk[0:total_size-writed_size])
+            else:
+                out_f.write(chunk)
+            writed_size += len(chunk)
             progress.update(task, advance=len(chunk))
-            #print(f"Progress: {progress:.2f}%\r", end='')
 
     console.print(f"[b]Fix headers...[/b]")
 
