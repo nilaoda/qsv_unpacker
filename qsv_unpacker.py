@@ -1,3 +1,5 @@
+import gzip
+import json
 import os
 import re
 import struct
@@ -151,7 +153,7 @@ with open(in_file, "r+b") as f:
     out_file = change_file_extension(in_file,'.ts')
     console.print(f"[b]out3   =>[/b] [cyan]{out_file}[/cyan]")
     with Progress() as progress, open(in_file, "rb") as in_f, open(out_file, "w+b") as out_f:
-        task = progress.add_task("[b]Copy TS...[/b]", total=total_size)
+        task = progress.add_task("[b]Copy Video...[/b]", total=total_size)
         writed_size = 0
         chunk_size = 2048
         in_f.seek(offset)
@@ -166,8 +168,6 @@ with open(in_file, "r+b") as f:
             writed_size += len(chunk)
             progress.update(task, advance=len(chunk))
 
-    console.print(f"[b]Fix headers...[/b]")
-
     # 解密加密部分
     with open(out_file, "r+b") as in_f:
         # 每个segment的前1024字节是加密的 需要解密
@@ -177,6 +177,32 @@ with open(in_file, "r+b") as f:
             decrypt_2(tmp)
             in_f.seek(seg[1]-offset)
             in_f.write(tmp)
+    
+    # dolby audio
+    if total_size < os.path.getsize(in_file) - offset:
+        out_file = change_file_extension(in_file,'.m4a')
+        console.print(f"[b]out4   =>[/b] [cyan]{out_file}[/cyan]")
+        # 需要提取audio的索引位置
+        size_table =[int(x) for x in json.loads(xml)["qsv_info"]["ad"]["seg"]["size"]]
+        # eac3起始位置
+        with Progress() as progress, open(in_file, "rb") as in_f, open(out_file, "w+b") as out_f:
+            task = progress.add_task("[b]Copy Audio...[/b]", total=os.path.getsize(in_file) - offset - total_size)
+            for i, s in enumerate(size_table):
+                chunk_size = s
+                offset = qindices[0][1] + total_size + sum(size_table[0:i])
+                in_f.seek(offset)
+                chunk = in_f.read(chunk_size)
+                if i == 0:
+                    # 解压gzip数据
+                    chunk = gzip.decompress(chunk)
+                # else:
+                #     tmp = bytearray(chunk[:1024])
+                #     decrypt_2(tmp)
+                #     chunk = tmp + chunk[1024:]
+                out_f.write(chunk)
+                progress.update(task, advance=len(chunk))
+
+
 
     print()
     console.print('Done', style='bold white on green')
