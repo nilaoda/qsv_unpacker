@@ -115,7 +115,7 @@ with open(in_file, "r+b") as f:
     f.seek(xml_offset)
     xml = bytearray(f.read(xml_size))
     decrypt_1(xml)
-    xml = xml[8:-2].decode('utf-8')
+    xml = xml[8:-1].decode('utf-8')
 
     # tvid
     tvid = get_prop(key='tvid', text=xml)
